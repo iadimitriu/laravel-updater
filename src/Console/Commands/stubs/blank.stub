@@ -1,0 +1,17 @@
+<?php
+
+use Iadimitriu\LaravelUpdater\Update;
+
+class DummyClass extends Update
+{
+    /**
+     * Run the update.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        //
+    }
+
+}
