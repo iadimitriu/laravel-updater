@@ -22,7 +22,7 @@
     },
     "autoload": {
         "psr-4": {
-            "iadimitriu\\laravel-updater\\": "src/"
+            "Iadimitriu\\LaravelUpdater\\": "src/"
         }
     },
     "extra": {
