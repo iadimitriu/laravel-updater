@@ -3,6 +3,7 @@
 namespace Iadimitriu\LaravelUpdater;
 
 use Illuminate\Database\ConnectionResolverInterface as Resolver;
+use Illuminate\Support\Facades\Log;
 
 class DatabaseUpdateRepository implements UpdaterRepositoryInterface
 {
@@ -106,6 +107,8 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
         $record = ['migration' => $file, 'batch' => $batch, 'created_at' => now()];
 
         $this->table()->insert($record);
+
+        Log::info("The file {$file} it was executed in the batch with number {$batch}");
     }
 
     /**

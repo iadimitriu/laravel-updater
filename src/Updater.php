@@ -158,6 +158,7 @@ class Updater
         // Once we have the array of migrations, we will spin through them and run the
         // migrations "up" so the changes are made to the databases. We'll then log
         // that the migration was run so we don't repeat it next time we execute.
+
         foreach ($updates as $file) {
             $this->runUp($file, $batch, $pretend);
 
@@ -300,7 +301,6 @@ class Updater
     {
         return Collection::make($paths)->flatMap(function ($path) {
             return Str::endsWith($path, '.php') ? [$path] : $this->files->glob($path.'/*_*.php');
-//            return Str::endsWith($path, '.php') ? [$path] : $this->files->glob($path.'/*.php');
         })->filter()->values()->keyBy(function ($file) {
             return $this->getUpdateName($file);
         })->sortBy(function ($file, $key) {

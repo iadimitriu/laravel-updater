@@ -56,12 +56,8 @@ class UpdateCommand extends Command
         // we will use the path relative to the root of this installation folder
         // so that migrations may be run for any path within the applications.
 
-//        dd($this->getUpdatePaths());
-
         $this->updater->setOutput($this->output)
-            ->run($this->getUpdatePaths(), [
-                'step' => 22,
-            ]);
+            ->run($this->getUpdatePaths(), []);
 
     }
 
