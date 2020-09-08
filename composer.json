@@ -8,7 +8,7 @@
             "email": "alexandru@dimitriu.io"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
         "php": "^7.2.5",
         "illuminate/console": "~5.5.43|~5.6.0|~5.7.0|~5.8.0|^6.0|^7.0",
