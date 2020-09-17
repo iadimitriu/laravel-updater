@@ -1,6 +1,6 @@
 <?php
 
-namespace Iadimitriu\LaravelUpdater;
+namespace Iadimitriu\LaravelUpdater\Console;
 
 use Closure;
 use Illuminate\Filesystem\Filesystem;
