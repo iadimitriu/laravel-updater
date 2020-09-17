@@ -2,7 +2,7 @@
 
 namespace Iadimitriu\LaravelUpdater\Console\Commands;
 
-use Iadimitriu\LaravelUpdater\UpdateCreator;
+use Iadimitriu\LaravelUpdater\Console\UpdateCreator;
 use Illuminate\Console\Command;
 
 use Illuminate\Support\Composer;
