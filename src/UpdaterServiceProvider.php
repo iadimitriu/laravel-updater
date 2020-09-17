@@ -2,6 +2,7 @@
 
 namespace Iadimitriu\LaravelUpdater;
 
+use Iadimitriu\LaravelUpdater\Console\UpdateCreator;
 use Iadimitriu\LaravelUpdater\Console\Commands\InstallCommand;
 use Iadimitriu\LaravelUpdater\Console\Commands\UpdateCommand;
 use Iadimitriu\LaravelUpdater\Console\Commands\UpdateMakeCommand;
