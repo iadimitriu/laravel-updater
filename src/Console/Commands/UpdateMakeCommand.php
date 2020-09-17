@@ -41,7 +41,7 @@ class UpdateMakeCommand extends Command
     /**
      * Create a new migration install command instance.
      *
-     * @param  \Iadimitriu\LaravelUpdater\UpdateCreator  $creator
+     * @param  \Iadimitriu\LaravelUpdater\Console\UpdateCreator  $creator
      * @param  \Illuminate\Support\Composer  $composer
      * @return void
      */
