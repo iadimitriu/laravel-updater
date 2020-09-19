@@ -2,11 +2,15 @@
 
 namespace Iadimitriu\LaravelUpdater;
 
+use Exception;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\ConnectionResolverInterface;
+use Illuminate\Database\ConnectionResolverInterface;
+use Illuminate\Database\ConnectionResolverInterface as Resolver;
 use Illuminate\Database\ConnectionResolverInterface as Resolver;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 class DatabaseUpdateRepository implements UpdaterRepositoryInterface
 {
@@ -161,17 +165,21 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
      */
     public function createRepository(): void
     {
-        $schema = $this->getConnection()->getSchemaBuilder();
+        try {
+            $schema = $this->getConnection()->getSchemaBuilder();
 
-        $schema->create($this->table, function ($table) {
-            // The migrations table is responsible for keeping track of which of the
-            // migrations have actually run for the application. We'll create the
-            // table to hold the migration file's path as well as the batch ID.
-            $table->increments('id');
-            $table->string('migration');
-            $table->integer('batch');
-            $table->dateTime('created_at');
-        });
+            $schema->create($this->table, function ($table) {
+                // The migrations table is responsible for keeping track of which of the
+                // migrations have actually run for the application. We'll create the
+                // table to hold the migration file's path as well as the batch ID.
+                $table->increments('id');
+                $table->string('migration');
+                $table->integer('batch');
+                $table->dateTime('created_at');
+            });
+        } catch (Exception $exception) {
+            throw new InvalidArgumentException("Could not create the updates table. Make sure the config file is published.");
+        }
     }
 
     /**
