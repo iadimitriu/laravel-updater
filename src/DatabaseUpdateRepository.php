@@ -4,7 +4,6 @@ namespace Iadimitriu\LaravelUpdater;
 
 use Exception;
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\ConnectionResolverInterface as Resolver;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Log;
@@ -203,9 +202,9 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
     /**
      * Get the connection resolver instance.
      *
-     * @return ConnectionResolverInterface
+     * @return Resolver
      */
-    public function getConnectionResolver(): ConnectionResolverInterface
+    public function getConnectionResolver(): Resolver
     {
         return $this->resolver;
     }
