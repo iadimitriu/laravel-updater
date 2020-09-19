@@ -9,13 +9,19 @@ Install the package via Composer
 
 ## Usage
 
+Publish the config file
+
+```
+php artisan vendor:publish --provider="Iadimitriu\LaravelUpdater\UpdaterServiceProvider" --tag="config"
+```
+
 Create a new file update
 
-```php
+```
 php artisan make:update TheUpdateName
 ```
 
 Run the updates
-```php
+```
 php artisan update
 ```

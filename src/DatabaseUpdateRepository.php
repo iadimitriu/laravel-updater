@@ -2,7 +2,10 @@
 
 namespace Iadimitriu\LaravelUpdater;
 
+use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\ConnectionResolverInterface as Resolver;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Log;
 
 class DatabaseUpdateRepository implements UpdaterRepositoryInterface
@@ -10,7 +13,7 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
     /**
      * The database connection resolver instance.
      *
-     * @var \Illuminate\Database\ConnectionResolverInterface
+     * @var Resolver
      */
     protected $resolver;
 
@@ -31,11 +34,10 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
     /**
      * Create a new database migration repository instance.
      *
-     * @param  \Illuminate\Database\ConnectionResolverInterface  $resolver
-     * @param  string  $table
-     * @return void
+     * @param Resolver $resolver
+     * @param string|null $table
      */
-    public function __construct(Resolver $resolver, $table)
+    public function __construct(Resolver $resolver, ?string $table)
     {
         $this->table = $table;
 
@@ -47,27 +49,30 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
      *
      * @return array
      */
-    public function getRan()
+    public function getRan(): array
     {
         return $this->table()
-                ->orderBy('batch', 'asc')
-                ->orderBy('migration', 'asc')
-                ->pluck('migration')->all();
+            ->orderBy('batch', 'asc')
+            ->orderBy('migration', 'asc')
+            ->pluck('migration')
+            ->all();
     }
 
     /**
      * Get list of migrations.
      *
-     * @param  int  $steps
+     * @param int $steps
      * @return array
      */
-    public function getUpdates($steps)
+    public function getUpdates(int $steps): array
     {
-        $query = $this->table()->where('batch', '>=', '1');
-
-        return $query->orderBy('batch', 'desc')
-                     ->orderBy('migration', 'desc')
-                     ->take($steps)->get()->all();
+        return $this->table()
+            ->where('batch', '>=', '1')
+            ->orderBy('batch', 'desc')
+            ->orderBy('migration', 'desc')
+            ->take($steps)
+            ->get()
+            ->all();
     }
 
     /**
@@ -75,11 +80,13 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
      *
      * @return array
      */
-    public function getLast()
+    public function getLast(): array
     {
-        $query = $this->table()->where('batch', $this->getLastBatchNumber());
-
-        return $query->orderBy('migration', 'desc')->get()->all();
+        return $this->table()
+            ->where('batch', $this->getLastBatchNumber())
+            ->orderBy('migration', 'desc')
+            ->get()
+            ->all();
     }
 
     /**
@@ -87,37 +94,42 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
      *
      * @return array
      */
-    public function getUpdateBatches()
+    public function getUpdateBatches(): array
     {
         return $this->table()
-                ->orderBy('batch', 'asc')
-                ->orderBy('migration', 'asc')
-                ->pluck('batch', 'migration')->all();
+            ->orderBy('batch', 'asc')
+            ->orderBy('migration', 'asc')
+            ->pluck('batch', 'migration')
+            ->all();
     }
 
     /**
      * Log that a migration was run.
      *
-     * @param  string  $file
-     * @param  int  $batch
+     * @param string $file
+     * @param int $batch
      * @return void
      */
-    public function log($file, $batch)
+    public function log(string $file, int $batch): void
     {
-        $record = ['migration' => $file, 'batch' => $batch, 'created_at' => now()];
+        $record = [
+            'migration' => $file,
+            'batch' => $batch,
+            'created_at' => now()
+        ];
 
         $this->table()->insert($record);
 
-        Log::info("The file {$file} it was executed in the batch with number {$batch}");
+        Log::info("The file {$file} was executed in the batch number {$batch}");
     }
 
     /**
      * Remove a migration from the log.
      *
-     * @param  object  $migration
+     * @param object $migration
      * @return void
      */
-    public function delete($migration)
+    public function delete(object $migration): void
     {
         $this->table()->where('migration', $migration->migration)->delete();
     }
@@ -127,7 +139,7 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
      *
      * @return int
      */
-    public function getNextBatchNumber()
+    public function getNextBatchNumber(): int
     {
         return $this->getLastBatchNumber() + 1;
     }
@@ -137,9 +149,9 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
      *
      * @return int
      */
-    public function getLastBatchNumber()
+    public function getLastBatchNumber(): int
     {
-        return $this->table()->max('batch');
+        return $this->table()->max('batch') ?? 0;
     }
 
     /**
@@ -147,7 +159,7 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
      *
      * @return void
      */
-    public function createRepository()
+    public function createRepository(): void
     {
         $schema = $this->getConnection()->getSchemaBuilder();
 
@@ -167,19 +179,17 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
      *
      * @return bool
      */
-    public function repositoryExists()
+    public function repositoryExists(): bool
     {
-        $schema = $this->getConnection()->getSchemaBuilder();
-
-        return $schema->hasTable($this->table);
+        return $this->getConnection()->getSchemaBuilder()->hasTable($this->table);
     }
 
     /**
      * Get a query builder for the migration table.
      *
-     * @return \Illuminate\Database\Query\Builder
+     * @return Builder
      */
-    protected function table()
+    protected function table(): Builder
     {
         return $this->getConnection()->table($this->table)->useWritePdo();
     }
@@ -187,9 +197,9 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
     /**
      * Get the connection resolver instance.
      *
-     * @return \Illuminate\Database\ConnectionResolverInterface
+     * @return ConnectionResolverInterface
      */
-    public function getConnectionResolver()
+    public function getConnectionResolver(): ConnectionResolverInterface
     {
         return $this->resolver;
     }
@@ -197,9 +207,9 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
     /**
      * Resolve the database connection instance.
      *
-     * @return \Illuminate\Database\Connection
+     * @return ConnectionInterface
      */
-    public function getConnection()
+    public function getConnection(): ConnectionInterface
     {
         return $this->resolver->connection($this->connection);
     }
@@ -207,10 +217,10 @@ class DatabaseUpdateRepository implements UpdaterRepositoryInterface
     /**
      * Set the information source to gather data.
      *
-     * @param  string  $name
+     * @param string|null $name
      * @return void
      */
-    public function setSource($name)
+    public function setSource(?string $name): void
     {
         $this->connection = $name;
     }

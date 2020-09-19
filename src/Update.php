@@ -23,7 +23,7 @@ abstract class Update
      *
      * @return string|null
      */
-    public function getConnection()
+    public function getConnection(): ?string
     {
         return $this->connection;
     }

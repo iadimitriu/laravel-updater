@@ -4,6 +4,7 @@ namespace Iadimitriu\LaravelUpdater\Console\Commands;
 
 use Iadimitriu\LaravelUpdater\UpdaterRepositoryInterface;
 use Illuminate\Console\Command;
+use Illuminate\Database\Migrations\MigrationRepositoryInterface;
 use Symfony\Component\Console\Input\InputOption;
 
 class InstallCommand extends Command
@@ -25,15 +26,14 @@ class InstallCommand extends Command
     /**
      * The repository instance.
      *
-     * @var \Illuminate\Database\Migrations\MigrationRepositoryInterface
+     * @var MigrationRepositoryInterface
      */
     protected $repository;
 
     /**
      * Create a new migration install command instance.
      *
-     * @param  \Illuminate\Database\Migrations\MigrationRepositoryInterface  $repository
-     * @return void
+     * @param UpdaterRepositoryInterface $repository
      */
     public function __construct(UpdaterRepositoryInterface $repository)
     {
@@ -47,7 +47,7 @@ class InstallCommand extends Command
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         $this->repository->setSource($this->input->getOption('database'));
 
@@ -61,7 +61,7 @@ class InstallCommand extends Command
      *
      * @return array
      */
-    protected function getOptions()
+    protected function getOptions(): array
     {
         return [
             ['database', null, InputOption::VALUE_OPTIONAL, 'The database connection to use'],

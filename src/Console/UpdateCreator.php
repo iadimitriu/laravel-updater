@@ -3,6 +3,8 @@
 namespace Iadimitriu\LaravelUpdater\Console;
 
 use Closure;
+use Exception;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -12,7 +14,7 @@ class UpdateCreator
     /**
      * The filesystem instance.
      *
-     * @var \Illuminate\Filesystem\Filesystem
+     * @var Filesystem
      */
     protected $files;
 
@@ -26,7 +28,7 @@ class UpdateCreator
     /**
      * Create a new migration creator instance.
      *
-     * @param  \Illuminate\Filesystem\Filesystem  $files
+     * @param Filesystem $files
      * @return void
      */
     public function __construct(Filesystem $files)
@@ -37,15 +39,13 @@ class UpdateCreator
     /**
      * Create a new migration at the given path.
      *
-     * @param  string  $name
-     * @param  string  $path
-     * @param  string|null  $table
-     * @param  bool  $create
+     * @param string $name
+     * @param string $path
      * @return string
      *
-     * @throws \Exception
+     * @throws Exception
      */
-    public function create($name, $path)
+    public function create(string $name, string $path): string
     {
         $this->ensureUpdateDoesntAlreadyExist($name, $path);
 
@@ -70,16 +70,18 @@ class UpdateCreator
     /**
      * Ensure that a migration with the given name doesn't already exist.
      *
-     * @param  string  $name
-     * @param  string  $migrationPath
+     * @param string $name
+     * @param null $migrationPath
      * @return void
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    protected function ensureUpdateDoesntAlreadyExist($name, $migrationPath = null)
+    protected function ensureUpdateDoesntAlreadyExist(string $name, $migrationPath = null): void
     {
-        if (! empty($migrationPath)) {
-            $migrationFiles = $this->files->glob($migrationPath.'/*.php');
+        if (!empty($migrationPath)) {
+            $this->files->ensureDirectoryExists($migrationPath);
+
+            $migrationFiles = $this->files->glob($migrationPath . '/*.php');
 
             foreach ($migrationFiles as $migrationFile) {
                 $this->files->requireOnce($migrationFile);
@@ -95,20 +97,21 @@ class UpdateCreator
      * Get the migration stub file.
      *
      * @return string
+     * @throws FileNotFoundException
      */
-    protected function getStub()
+    protected function getStub(): string
     {
-            return $this->files->get($this->stubPath().'/blank.stub');
+        return $this->files->get($this->stubPath() . '/blank.stub');
     }
 
     /**
      * Populate the place-holders in the migration stub.
      *
-     * @param  string  $name
-     * @param  string  $stub
+     * @param string $name
+     * @param string $stub
      * @return string
      */
-    protected function populateStub($name, $stub)
+    protected function populateStub(string $name, string $stub): string
     {
         $stub = str_replace('DummyClass', $this->getClassName($name), $stub);
 
@@ -118,10 +121,10 @@ class UpdateCreator
     /**
      * Get the class name of a migration name.
      *
-     * @param  string  $name
+     * @param string $name
      * @return string
      */
-    protected function getClassName($name)
+    protected function getClassName(string $name): string
     {
         return Str::studly($name);
     }
@@ -129,13 +132,13 @@ class UpdateCreator
     /**
      * Get the full path to the migration.
      *
-     * @param  string  $name
-     * @param  string  $path
+     * @param string $name
+     * @param string $path
      * @return string
      */
-    protected function getPath($name, $path)
+    protected function getPath(string $name, string $path): string
     {
-        return $path.'/'.$this->getDatePrefix().'_'.$name.'.php';
+        return $path . '/' . $this->getDatePrefix() . '_' . $name . '.php';
     }
 
     /**
@@ -143,7 +146,7 @@ class UpdateCreator
      *
      * @return void
      */
-    protected function firePostCreateHooks()
+    protected function firePostCreateHooks(): void
     {
         foreach ($this->postCreate as $callback) {
             $callback();
@@ -153,42 +156,40 @@ class UpdateCreator
     /**
      * Register a post migration create hook.
      *
-     * @param  \Closure  $callback
+     * @param Closure $callback
      * @return void
      */
-    public function afterCreate(Closure $callback)
+    public function afterCreate(Closure $callback): void
     {
         $this->postCreate[] = $callback;
     }
-
 
     /**
      * Get the date prefix for the migration.
      *
      * @return string
      */
-    protected function getDatePrefix()
+    protected function getDatePrefix(): string
     {
         return date('Y_m_d_His');
     }
-
 
     /**
      * Get the path to the stubs.
      *
      * @return string
      */
-    public function stubPath()
+    public function stubPath(): string
     {
-        return __DIR__.'/Commands/stubs';
+        return __DIR__ . '/Commands/stubs';
     }
 
     /**
      * Get the filesystem instance.
      *
-     * @return \Illuminate\Filesystem\Filesystem
+     * @return Filesystem
      */
-    public function getFilesystem()
+    public function getFilesystem(): Filesystem
     {
         return $this->files;
     }

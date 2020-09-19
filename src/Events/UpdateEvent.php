@@ -11,7 +11,7 @@ abstract class UpdateEvent implements UpdateEventContract
     /**
      * An migration instance.
      *
-//     * @var \Illuminate\Database\Migrations\Migration
+     * @var Migration
      */
     public $migration;
 
@@ -25,11 +25,10 @@ abstract class UpdateEvent implements UpdateEventContract
     /**
      * Create a new event instance.
      *
-     * @param  \Illuminate\Database\Migrations\Migration  $migration
-     * @param  string  $method
-     * @return void
+     * @param Update $migration
+     * @param string $method
      */
-    public function __construct(Update $migration, $method)
+    public function __construct(Update $migration, string $method)
     {
         $this->method = $method;
         $this->migration = $migration;

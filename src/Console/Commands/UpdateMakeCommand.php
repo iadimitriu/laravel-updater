@@ -2,11 +2,13 @@
 
 namespace Iadimitriu\LaravelUpdater\Console\Commands;
 
+use Exception;
 use Iadimitriu\LaravelUpdater\Console\UpdateCreator;
 use Illuminate\Console\Command;
-
+use Illuminate\Database\Migrations\MigrationCreator;
 use Illuminate\Support\Composer;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class UpdateMakeCommand extends Command
 {
@@ -27,22 +29,22 @@ class UpdateMakeCommand extends Command
     /**
      * The migration creator instance.
      *
-     * @var \Illuminate\Database\Migrations\MigrationCreator
+     * @var MigrationCreator
      */
     protected $creator;
 
     /**
      * The Composer instance.
      *
-     * @var \Illuminate\Support\Composer
+     * @var Composer
      */
     protected $composer;
 
     /**
      * Create a new migration install command instance.
      *
-     * @param  \Iadimitriu\LaravelUpdater\Console\UpdateCreator  $creator
-     * @param  \Illuminate\Support\Composer  $composer
+     * @param UpdateCreator $creator
+     * @param Composer $composer
      * @return void
      */
     public function __construct(UpdateCreator $creator, Composer $composer)
@@ -57,9 +59,14 @@ class UpdateMakeCommand extends Command
      * Execute the console command.
      *
      * @return void
+     * @throws Exception
      */
-    public function handle()
+    public function handle(): void
     {
+        if (is_null($this->laravel['config']['update.path'])) {
+            throw new InvalidArgumentException("Invalid path. Make sure the config file is published.");
+        }
+
         // It's possible for the developer to specify the tables to modify in this
         // schema operation. The developer may also specify if this table needs
         // to be freshly created so we can create the appropriate migrations.
@@ -76,17 +83,16 @@ class UpdateMakeCommand extends Command
     /**
      * Write the migration file to disk.
      *
-     * @param  string  $name
-     * @param  string  $table
-     * @param  bool  $create
-     * @return string
+     * @param string $name
+     * @return void
+     * @throws Exception
      */
-    protected function writeUpdate($name)
+    protected function writeUpdate(string $name): void
     {
         $file = $this->creator->create(
             $name, $this->getUpdatePath());
 
-            $file = pathinfo($file, PATHINFO_FILENAME);
+        $file = pathinfo($file, PATHINFO_FILENAME);
 
         $this->line("<info>Created Update:</info> {$file}");
     }
@@ -96,9 +102,9 @@ class UpdateMakeCommand extends Command
      *
      * @return string
      */
-    protected function getUpdatePath()
+    protected function getUpdatePath(): string
     {
-        return $this->laravel->basePath().DIRECTORY_SEPARATOR.'updates';
+        return $this->laravel->basePath() . DIRECTORY_SEPARATOR . $this->laravel['config']['update.path'];
     }
 
 }
