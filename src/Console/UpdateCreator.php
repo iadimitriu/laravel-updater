@@ -79,7 +79,9 @@ class UpdateCreator
     protected function ensureUpdateDoesntAlreadyExist(string $name, $migrationPath = null): void
     {
         if (!empty($migrationPath)) {
-            $this->files->ensureDirectoryExists($migrationPath);
+            if (!$this->files->isDirectory($migrationPath)) {
+                $this->files->makeDirectory($migrationPath, 0755, true);
+            }
 
             $migrationFiles = $this->files->glob($migrationPath . '/*.php');
 
