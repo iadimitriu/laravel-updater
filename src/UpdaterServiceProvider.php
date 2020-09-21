@@ -2,18 +2,15 @@
 
 namespace Iadimitriu\LaravelUpdater;
 
-use Iadimitriu\LaravelUpdater\Console\UpdateCreator;
 use Iadimitriu\LaravelUpdater\Console\Commands\InstallCommand;
 use Iadimitriu\LaravelUpdater\Console\Commands\UpdateCommand;
 use Iadimitriu\LaravelUpdater\Console\Commands\UpdateMakeCommand;
+use Iadimitriu\LaravelUpdater\Console\UpdateCreator;
 use Illuminate\Contracts\Support\DeferrableProvider;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 
-class UpdaterServiceProvider extends ServiceProvider  implements DeferrableProvider
+class UpdaterServiceProvider extends ServiceProvider implements DeferrableProvider
 {
-
     /**
      * The commands to be registered.
      *
@@ -26,11 +23,21 @@ class UpdaterServiceProvider extends ServiceProvider  implements DeferrableProvi
     ];
 
     /**
+     * Bootstrap the application services.
+     *
+     * @return void
+     */
+    public function boot(): void
+    {
+        $this->registerPublishables();
+    }
+
+    /**
      * Register services.
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->registerRepository();
 
@@ -41,35 +48,22 @@ class UpdaterServiceProvider extends ServiceProvider  implements DeferrableProvi
         $this->registerCommands($this->commands);
     }
 
-    /**
-     * Returns existing migration file if found, else uses the current timestamp.
-     *
-     * @param Filesystem $filesystem
-     * @return string
-     */
-//    protected function getUpdateFileName(Filesystem $filesystem): string
-//    {
-//
-//        $timestamp = date('Y_m_d_His  ');
-//
-//        return Collection::make($this->app->databasePath().DIRECTORY_SEPARATOR.'updates'.DIRECTORY_SEPARATOR)
-//            ->flatMap(function ($path) use ($filesystem) {
-//                return $filesystem->glob($path.'*_create_updates_table.php');
-//            })->push($this->app->databasePath()."/migrations/{$timestamp}_create_updates_table.php")
-//            ->first();
-//    }
+    protected function registerPublishables(): void
+    {
+        $this->publishes([
+            __DIR__ . '/../config/update.php' => config_path('update.php'),
+        ], 'config');
+    }
 
     /**
      * Register the migration repository service.
      *
      * @return void
      */
-    protected function registerRepository()
+    protected function registerRepository(): void
     {
         $this->app->singleton('update.repository', function ($app) {
-//            $table = $app['config']['update.migrations']; // TODO: The table should be readed from the config file.
-            $table = 'updates';
-            return new DatabaseUpdateRepository($app['db'], $table);
+            return new DatabaseUpdateRepository($app['db'], $app['config']['update.migrations']);
         });
     }
 
@@ -78,15 +72,13 @@ class UpdaterServiceProvider extends ServiceProvider  implements DeferrableProvi
      *
      * @return void
      */
-    protected function registerUpdater()
+    protected function registerUpdater(): void
     {
         // The migrator is responsible for actually running and rollback the migration
         // files in the application. We'll pass in our database connection resolver
         // so the migrator can resolve any of these connections when it needs to.
         $this->app->singleton('updater', function ($app) {
-            $repository = $app['update.repository'];
-
-            return new Updater($repository, $app['db'], $app['files'], $app['events']);
+            return new Updater($app['update.repository'], $app['db'], $app['files'], $app['events']);
         });
     }
 
@@ -95,7 +87,7 @@ class UpdaterServiceProvider extends ServiceProvider  implements DeferrableProvi
      *
      * @return void
      */
-    protected function registerCreator()
+    protected function registerCreator(): void
     {
         $this->app->singleton('updater.creator', function ($app) {
             return new UpdateCreator($app['files']);
@@ -105,10 +97,10 @@ class UpdaterServiceProvider extends ServiceProvider  implements DeferrableProvi
     /**
      * Register the given commands.
      *
-     * @param  array  $commands
+     * @param array $commands
      * @return void
      */
-    protected function registerCommands(array $commands)
+    protected function registerCommands(array $commands): void
     {
         foreach (array_keys($commands) as $command) {
             call_user_func_array([$this, "register{$command}Command"], []);
@@ -122,7 +114,7 @@ class UpdaterServiceProvider extends ServiceProvider  implements DeferrableProvi
      *
      * @return void
      */
-    protected function registerUpdateCommand()
+    protected function registerUpdateCommand(): void
     {
         $this->app->singleton('command.update', function ($app) {
             return new UpdateCommand($app['updater']);
@@ -134,27 +126,22 @@ class UpdaterServiceProvider extends ServiceProvider  implements DeferrableProvi
      *
      * @return void
      */
-    protected function registerUpdateMakeCommand()
+    protected function registerUpdateMakeCommand(): void
     {
         $this->app->singleton('command.update.make', function ($app) {
             // Once we have the migration creator registered, we will create the command
             // and inject the creator. The creator is responsible for the actual file
             // creation of the migrations, and may be extended by these developers.
-            $creator = $app['updater.creator'];
-
-            $composer = $app['composer'];
-
-            return new UpdateMakeCommand($creator, $composer);
+            return new UpdateMakeCommand($app['updater.creator'], $app['composer']);
         });
     }
-
 
     /**
      * Register the command.
      *
      * @return void
      */
-    protected function registerUpdateInstallCommand()
+    protected function registerUpdateInstallCommand(): void
     {
         $this->app->singleton('command.update.install', function ($app) {
             return new InstallCommand($app['update.repository']);
@@ -166,7 +153,7 @@ class UpdaterServiceProvider extends ServiceProvider  implements DeferrableProvi
      *
      * @return array
      */
-    public function provides()
+    public function provides(): array
     {
         return array_merge([
             'updater', 'update.repository', 'update.creator',

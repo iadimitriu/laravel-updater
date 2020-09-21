@@ -2,6 +2,8 @@
 
 namespace Iadimitriu\LaravelUpdater\Events;
 
+use Illuminate\Database\Connection;
+
 abstract class ConnectionEvent
 {
     /**
@@ -14,17 +16,16 @@ abstract class ConnectionEvent
     /**
      * The database connection instance.
      *
-     * @var \Illuminate\Database\Connection
+     * @var Connection
      */
     public $connection;
 
     /**
      * Create a new event instance.
      *
-     * @param  \Illuminate\Database\Connection  $connection
-     * @return void
+     * @param Connection $connection
      */
-    public function __construct($connection)
+    public function __construct(Connection $connection)
     {
         $this->connection = $connection;
         $this->connectionName = $connection->getName();

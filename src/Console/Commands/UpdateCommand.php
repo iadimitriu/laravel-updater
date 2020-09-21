@@ -4,10 +4,12 @@ namespace Iadimitriu\LaravelUpdater\Console\Commands;
 
 use Iadimitriu\LaravelUpdater\Updater;
 use Illuminate\Console\Command;
+use Illuminate\Database\Migrations\Migrator;
+use InvalidArgumentException;
+use Throwable;
 
 class UpdateCommand extends Command
 {
-
     /**
      * The name and signature of the console command.
      *
@@ -27,19 +29,19 @@ class UpdateCommand extends Command
     /**
      * The migrator instance.
      *
-     * @var \Illuminate\Database\Migrations\Migrator
+     * @var Migrator
      */
     protected $updater;
 
     /**
      * Create a new migration command instance.
      *
-     * @param \Illuminate\Database\Migrations\Updater $updater
-     * @return void
+     * @param Updater $updater
      */
     public function __construct(Updater $updater)
     {
         parent::__construct();
+
         $this->updater = $updater;
     }
 
@@ -47,9 +49,13 @@ class UpdateCommand extends Command
      * Execute the console command.
      *
      * @return void
+     * @throws Throwable
      */
-    public function handle()
+    public function handle(): void
     {
+        if (is_null($this->laravel['config']['update.path'])) {
+            throw new InvalidArgumentException("Invalid path. Make sure the config file is published.");
+        }
 
         $this->prepareDatabase();
         // Next, we will check to see if a path option has been defined. If it has
@@ -58,7 +64,6 @@ class UpdateCommand extends Command
 
         $this->updater->setOutput($this->output)
             ->run($this->getUpdatePaths(), []);
-
     }
 
     /**
@@ -66,7 +71,7 @@ class UpdateCommand extends Command
      *
      * @return void
      */
-    protected function prepareDatabase()
+    protected function prepareDatabase(): void
     {
         $this->updater->setConnection($this->option('database'));
 
@@ -77,14 +82,19 @@ class UpdateCommand extends Command
         }
     }
 
-    protected function getUpdatePaths()
+    /**
+     * @return array
+     */
+    protected function getUpdatePaths(): array
     {
         return array_merge([$this->getUpdatePath()], glob($this->getUpdatePath() . '/*', GLOB_ONLYDIR));
     }
 
-
-    protected function getUpdatePath()
+    /**
+     * @return string
+     */
+    protected function getUpdatePath(): string
     {
-        return $this->laravel->basePath() . DIRECTORY_SEPARATOR . 'updates';
+        return $this->laravel->basePath() . DIRECTORY_SEPARATOR . $this->laravel['config']['update.path'];
     }
 }
